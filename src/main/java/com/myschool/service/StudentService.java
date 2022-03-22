@@ -4,6 +4,7 @@ import com.myschool.model.Student;
 import com.myschool.repository.StudentRepository;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,7 +33,8 @@ public class StudentService {
         return studentRepository.getStudentByEmail(email);
     }
 
-    public Student registerStudent(Student student)
+    @Transactional
+    public Student saveStudent(Student student)
     {
         return studentRepository.save(student);
     }
