@@ -16,7 +16,7 @@ public class H2DataSourceConfig {
     @Value("${jdbc.h2.datasource.password:}")
     private String password;
 
-   // @Bean
+   @Bean
     public DataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName("org.h2.Driver");
