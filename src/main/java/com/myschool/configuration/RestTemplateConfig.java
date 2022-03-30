@@ -1,5 +1,6 @@
 package com.myschool.configuration;
 
+import com.myschool.httpmessageconverter.CustomCSVConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
@@ -10,6 +11,8 @@ public class RestTemplateConfig {
     @Bean
     public RestTemplate getRestTemplate()
     {
-        return new RestTemplate();
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.getMessageConverters().add(new CustomCSVConverter());
+        return restTemplate;
     }
 }

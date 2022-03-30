@@ -7,14 +7,12 @@ import com.myschool.representation.DiscountRO;
 import com.myschool.representation.StudentRO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Collections;
 import java.util.Optional;
 
 @Service
@@ -80,8 +78,13 @@ public class ScholarshipService {
         String path = env.getProperty("scholarship.paths.discountwithcsvformat");
 
         // TODO: Accept text/customcsv
-        ResponseEntity<DiscountRO> response =
-                restTemplate.getForEntity(path, DiscountRO.class, studentId);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Collections.singletonList(new MediaType("text","customcsv")));
+
+        HttpEntity<DiscountRO> requestEntity = new HttpEntity<>(headers);
+
+        ResponseEntity<DiscountRO> response = restTemplate.exchange(path, HttpMethod.GET, requestEntity, DiscountRO.class, studentId);
+
 
         if(response.getStatusCode() != HttpStatus.OK)
         {
