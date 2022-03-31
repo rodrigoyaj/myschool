@@ -7,15 +7,15 @@ import com.myschool.representation.DiscountRO;
 import com.myschool.representation.StudentRO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.util.Optional;
+
 
 @Service
 public class ScholarshipService {
@@ -23,6 +23,10 @@ public class ScholarshipService {
     private RestTemplate restTemplate;
     private StudentRepository studentRepository;
     private Environment env;
+    private Mono mono;
+    private WebClient webClient= WebClient.create("http://localhost:8080/api/v1/myschool/students");
+
+    //new code
 
     @Autowired
     public ScholarshipService(Environment env,
@@ -47,41 +51,77 @@ public class ScholarshipService {
 
         HttpEntity<StudentRO> request = new HttpEntity<>(studentRO);
 
-        // TODO: Use WebFlux
-        ResponseEntity<String> response = restTemplate.exchange(path,
-                HttpMethod.POST, request, String.class);
+        // restTemplate
+        /*ResponseEntity<String> response = restTemplate.exchange(path,
+                HttpMethod.POST, request, String.class);*/
 
+        //webFlux
+        String cad = webClient.post()
+                .uri(path)
+                .body(Mono.just(studentRO), ResponseEntity.class)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+
+        ResponseEntity<String> response=new ResponseEntity<>(cad,HttpStatus.OK);
+
+        //restTemplate
         if(response.getStatusCode() != HttpStatus.OK)
             throw new Exception("Something went wrong");
-
         System.out.println(response.getBody());
+
+
     }
 
     public DiscountRO getStudentDiscount(long studentId) throws Exception {
         String path = env.getProperty("scholarship.paths.discount");
 
         ResponseEntity<DiscountRO> response = null;
+        Mono<DiscountRO> response2 = null;
         try{
-            // TODO: Use WebFlux
-            response = restTemplate.getForEntity(path, DiscountRO.class, studentId);
+            // restTemplate
+            //response = restTemplate.getForEntity(path, DiscountRO.class, studentId);
+
+            //webFlux
+            response2 = webClient.get()
+                    .uri(path,studentId)
+                    .retrieve()
+                    .onStatus(HttpStatus::is4xxClientError, clientResponse -> {
+                        if(clientResponse.statusCode().equals(HttpStatus.NOT_FOUND)){
+                            /*return Mono.error(new HttpClientErrorException(HttpStatus.NOT_FOUND,
+                                    "Entity not found buuuuu."));*/
+                            return Mono.empty();
+                        } else {
+                            //return Mono.error(new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+                            return Mono.empty();
+                        }
+                    })
+                    .bodyToMono(DiscountRO.class);
+
         }catch (final HttpClientErrorException e) {
             if(e.getStatusCode() == HttpStatus.NOT_FOUND)
                 throw new StudentNotFoundException();
         }
 
-        if (response.getStatusCode() != HttpStatus.OK)
+        //restTemplate
+       /*if (response.getStatusCode() != HttpStatus.OK)
         {
             throw new Exception("Something went wrong.");
         }
-        return response.getBody();
+        return response.getBody();*/
+
+
+        //webFlux
+        //System.out.println(response2.block().getStudentId());
+        return response2.block();
     }
 
     public DiscountRO getStudentDiscountWithCSVFormat(long studentId) throws Exception {
         String path = env.getProperty("scholarship.paths.discountwithcsvformat");
 
         // TODO: Accept text/customcsv
-        ResponseEntity<DiscountRO> response =
-                restTemplate.getForEntity(path, DiscountRO.class, studentId);
+        ResponseEntity<String> response =
+                restTemplate.getForEntity(path, String.class, studentId);
 
         if(response.getStatusCode() != HttpStatus.OK)
         {
@@ -90,6 +130,10 @@ public class ScholarshipService {
             throw new Exception("Something went wrong");
         }
 
-        return response.getBody();
+        System.out.println(response.getBody());
+
+        return new DiscountRO();
     }
+
+
 }
