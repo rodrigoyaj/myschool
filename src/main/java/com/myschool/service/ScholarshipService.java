@@ -7,14 +7,15 @@ import com.myschool.representation.DiscountRO;
 import com.myschool.representation.StudentRO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
+import java.util.Collections;
 import java.util.Optional;
 
 @Service
@@ -24,19 +25,20 @@ public class ScholarshipService {
     private StudentRepository studentRepository;
     private Environment env;
 
+
     @Autowired
     public ScholarshipService(Environment env,
                               RestTemplate restTemplate,
-                              StudentRepository studentRepository)
+                              StudentRepository studentRepository )
     {
         this.env = env;
-        this.restTemplate = restTemplate;
+       this.restTemplate = restTemplate;
         this.studentRepository = studentRepository;
     }
 
     public void sendStudent(long studentId) throws Exception {
         Optional<Student> studentOptional = studentRepository.findById(studentId);
-
+       // System.out.println(studentOptional);
         if(studentOptional.orElse(null) == null)
             return;
 
@@ -44,10 +46,8 @@ public class ScholarshipService {
         StudentRO studentRO = new StudentRO(student);
 
         String path = env.getProperty("scholarship.paths.register");
-
+       // TODO: Use WebFlux
         HttpEntity<StudentRO> request = new HttpEntity<>(studentRO);
-
-        // TODO: Use WebFlux
         ResponseEntity<String> response = restTemplate.exchange(path,
                 HttpMethod.POST, request, String.class);
 
@@ -60,7 +60,7 @@ public class ScholarshipService {
     public DiscountRO getStudentDiscount(long studentId) throws Exception {
         String path = env.getProperty("scholarship.paths.discount");
 
-        ResponseEntity<DiscountRO> response = null;
+           ResponseEntity<DiscountRO> response = null;
         try{
             // TODO: Use WebFlux
             response = restTemplate.getForEntity(path, DiscountRO.class, studentId);
@@ -80,6 +80,10 @@ public class ScholarshipService {
         String path = env.getProperty("scholarship.paths.discountwithcsvformat");
 
         // TODO: Accept text/customcsv
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Collections.singletonList(new MediaType("text","customcsv")));
+
+        HttpEntity<DiscountRO> requestEntity = new HttpEntity<>(headers);
         ResponseEntity<DiscountRO> response =
                 restTemplate.getForEntity(path, DiscountRO.class, studentId);
 
@@ -89,7 +93,6 @@ public class ScholarshipService {
             System.out.println(response.getStatusCode());
             throw new Exception("Something went wrong");
         }
-
         return response.getBody();
     }
 }

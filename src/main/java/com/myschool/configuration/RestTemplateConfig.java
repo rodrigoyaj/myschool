@@ -6,10 +6,11 @@ import org.springframework.web.client.RestTemplate;
 
 @Configuration
 public class RestTemplateConfig {
-
     @Bean
     public RestTemplate getRestTemplate()
     {
-        return new RestTemplate();
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.getMessageConverters().add(new CsvHttpMessageConverter());
+        return restTemplate;
     }
 }
