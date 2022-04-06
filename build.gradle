@@ -6,7 +6,7 @@ plugins {
 
 group = 'com.myschool'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '11'
+sourceCompatibility = '1.8'
 
 repositories {
 	mavenCentral()
@@ -15,11 +15,14 @@ repositories {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.jumpmind.symmetric:symmetric-csv:3.5.19'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'com.h2database:h2'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'com.github.javafaker:javafaker:1.0.2'
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+	//implementation 'com.opencsv:opencsv:5.6'
 }
 
 tasks.named('test') {

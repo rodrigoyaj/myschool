@@ -62,9 +62,15 @@ public class StudentResource {
         return new ResponseEntity<>(discountRO, HttpStatus.OK);
     }
 
-    @GetMapping("/{id}/discountfromcsvformat")
+    @GetMapping(value="/{id}/discountfromcsvformat")
     public ResponseEntity<DiscountRO> getStudentDiscountFromCSVFormat(@PathVariable long id) throws Exception {
         DiscountRO discountRO = scholarshipService.getStudentDiscountWithCSVFormat(id);
         return new ResponseEntity<>(discountRO, HttpStatus.OK);
+    }
+    @PutMapping("/update")
+    public ResponseEntity<Student> updateStudent(@RequestBody Student student) throws Exception {
+     //   System.out.println("Controller "+student);
+        scholarshipService.updateStudent(student);
+        return new ResponseEntity<Student>(student,HttpStatus.OK);
     }
 }
